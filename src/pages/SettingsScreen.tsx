@@ -5,11 +5,7 @@ import {
 } from "lucide-react";
 import { StatusDot } from "@/components/studio/StatusDot";
 
-const fadeUp = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: [0.2, 0, 0, 1] },
-};
+import { fadeUp } from "@/lib/animations";
 
 const services = [
   { name: "Recorder Server", status: "active" as const, uptime: "14d 6h 32m", memory: "128 MB", port: "8080" },

@@ -5,11 +5,7 @@ import { SegmentedControl } from "@/components/studio/SegmentedControl";
 import { TakeCard } from "@/components/studio/TakeCard";
 import { Link } from "react-router-dom";
 
-const fadeUp = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: [0.2, 0, 0, 1] },
-};
+import { fadeUp } from "@/lib/animations";
 
 const allTakes = [
   { title: "Nocturne Op.9 No.2", takeNumber: 42, date: "Today, 14:32", duration: "4:53", project: "Chopin Nocturnes", category: "In Progress", isFavorite: true, hasVideo: true, hasComments: true, thumbnailHue: 142 },

@@ -2,11 +2,7 @@ import { motion } from "framer-motion";
 import { AlertTriangle, Search } from "lucide-react";
 import { TakeCard } from "@/components/studio/TakeCard";
 
-const fadeUp = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: [0.2, 0, 0, 1] },
-};
+import { fadeUp } from "@/lib/animations";
 
 const archivedTakes = [
   { title: "Nocturne Op.55 No.1 — Draft", takeNumber: 3, date: "Feb 28", duration: "4:11", project: "Chopin Nocturnes", isArchived: true, hasVideo: true, thumbnailHue: 142 },
