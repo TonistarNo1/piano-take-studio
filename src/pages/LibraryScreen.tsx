@@ -3,33 +3,17 @@ import { useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { SegmentedControl } from "@/components/studio/SegmentedControl";
 import { TakeCard } from "@/components/studio/TakeCard";
-import { Link } from "react-router-dom";
-
+import { useStudio } from "@/store/StudioContext";
 import { fadeUp } from "@/lib/animations";
-
-const allTakes = [
-  { title: "Nocturne Op.9 No.2", takeNumber: 42, date: "Today, 14:32", duration: "4:53", project: "Chopin Nocturnes", category: "In Progress", isFavorite: true, hasVideo: true, hasComments: true, thumbnailHue: 142 },
-  { title: "Clair de Lune", takeNumber: 18, date: "Today, 11:05", duration: "5:21", project: "Debussy", category: "Idea", hasVideo: true, thumbnailHue: 220 },
-  { title: "Prelude in C Major", takeNumber: 7, date: "Yesterday", duration: "2:15", project: "Bach WTC", hasVideo: true, thumbnailHue: 280 },
-  { title: "Ballade No.1 — Opening", takeNumber: 31, date: "Yesterday", duration: "3:47", project: "Chopin Ballades", category: "In Progress", isFavorite: true, hasVideo: true, thumbnailHue: 340 },
-  { title: "Gymnopédie No.1", takeNumber: 12, date: "Mar 13", duration: "3:02", project: "Satie", hasVideo: true, thumbnailHue: 180 },
-  { title: "Rêverie", takeNumber: 5, date: "Mar 13", duration: "4:11", project: "Debussy", hasVideo: true, thumbnailHue: 200 },
-  { title: "Liebestraum No.3", takeNumber: 22, date: "Mar 12", duration: "6:14", project: "Liszt", category: "Completed", isFavorite: true, hasVideo: true, hasComments: true, thumbnailHue: 300 },
-  { title: "Moonlight Sonata — Mvt.1", takeNumber: 15, date: "Mar 11", duration: "7:02", project: "Beethoven Sonatas", category: "In Progress", hasVideo: true, thumbnailHue: 240 },
-  { title: "Arabesque No.1", takeNumber: 9, date: "Mar 10", duration: "4:28", project: "Debussy", hasVideo: true, thumbnailHue: 160 },
-  { title: "Waltz in C# Minor", takeNumber: 28, date: "Mar 9", duration: "3:55", project: "Chopin Waltzes", category: "Idea", hasVideo: true, thumbnailHue: 50 },
-];
 
 export default function LibraryScreen() {
   const [activeTab, setActiveTab] = useState("All");
-  const [search, setSearch] = useState("");
+  const { getFilteredTakes, searchQuery, setSearch, activeFilters, toggleFilter, playTake, toggleFavorite, archiveTake, deleteTake, takes, projects } = useStudio();
 
-  const filtered = allTakes.filter((t) => {
-    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
-    if (activeTab === "Favorites") return t.isFavorite;
-    if (activeTab === "Recent") return ["Today", "Yesterday"].some((d) => t.date.includes(d));
-    return true;
-  });
+  const filtered = getFilteredTakes(activeTab);
+
+  const uniqueProjects = [...new Set(takes.filter((t) => !t.isArchived && t.project).map((t) => t.project))];
+  const filterOptions = [...uniqueProjects, "Has Video", "Commented"];
 
   return (
     <motion.div {...fadeUp} className="space-y-6">
@@ -42,46 +26,75 @@ export default function LibraryScreen() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
         <input
-          value={search}
+          value={searchQuery}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search takes..."
           className="w-full h-11 pl-10 pr-12 rounded-xl bg-secondary/50 border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
         />
-        <button className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg bg-secondary flex items-center justify-center">
-          <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
-        </button>
+        {searchQuery && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg bg-secondary flex items-center justify-center text-xs text-muted-foreground"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
       <SegmentedControl
-        segments={["All", "Favorites", "Recent", "Archived"]}
+        segments={["All", "Favorites", "Recent"]}
         active={activeTab}
         onChange={setActiveTab}
       />
 
       {/* Filter pills */}
       <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-        {["Chopin Nocturnes", "Debussy", "Bach WTC", "Has Video", "Commented"].map((f) => (
+        {filterOptions.map((f) => (
           <button
             key={f}
-            className="text-xs px-3 py-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap shrink-0"
+            onClick={() => toggleFilter(f)}
+            className={`text-xs px-3 py-1.5 rounded-full transition-colors whitespace-nowrap shrink-0 active:scale-95 ${
+              activeFilters.includes(f)
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+            }`}
           >
             {f}
           </button>
         ))}
+        {activeFilters.length > 0 && (
+          <button
+            onClick={() => { toggleFilter(activeFilters[0]); }}
+            className="text-xs px-3 py-1.5 rounded-full bg-destructive/10 text-destructive whitespace-nowrap shrink-0"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Takes */}
       <div className="space-y-2">
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground text-sm">
+            No takes match your filters.
+          </div>
+        )}
         {filtered.map((take) => (
-          <Link key={take.takeNumber} to={`/library/${take.takeNumber}`}>
-            <TakeCard {...take} />
-          </Link>
+          <TakeCard
+            key={take.id}
+            take={take}
+            showActions
+            onPlay={() => playTake(take.id)}
+            onFavorite={() => toggleFavorite(take.id)}
+            onArchive={() => archiveTake(take.id)}
+            onDelete={() => deleteTake(take.id)}
+          />
         ))}
       </div>
 
       <p className="text-center text-xs text-muted-foreground py-4">
-        Showing {filtered.length} of {allTakes.length} takes
+        Showing {filtered.length} of {takes.filter((t) => !t.isArchived).length} takes
       </p>
     </motion.div>
   );
