@@ -12,6 +12,7 @@ import ProjectsScreen from "./pages/ProjectsScreen";
 import ProjectDetailScreen from "./pages/ProjectDetailScreen";
 import ArchiveScreen from "./pages/ArchiveScreen";
 import CategoriesScreen from "./pages/CategoriesScreen";
+import MediaEditorScreen from "./pages/MediaEditorScreen";
 import SettingsScreen from "./pages/SettingsScreen";
 import NotFound from "./pages/NotFound";
 
