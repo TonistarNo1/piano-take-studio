@@ -35,6 +35,7 @@ const App = () => (
             <Route path="/archive" element={<ArchiveScreen />} />
             <Route path="/categories" element={<CategoriesScreen />} />
             <Route path="/settings" element={<SettingsScreen />} />
+            <Route path="/media-editor" element={<MediaEditorScreen />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </StudioLayout>
