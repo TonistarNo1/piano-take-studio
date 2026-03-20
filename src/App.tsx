@@ -12,6 +12,7 @@ import ProjectsScreen from "./pages/ProjectsScreen";
 import ProjectDetailScreen from "./pages/ProjectDetailScreen";
 import ArchiveScreen from "./pages/ArchiveScreen";
 import CategoriesScreen from "./pages/CategoriesScreen";
+import MediaEditorScreen from "./pages/MediaEditorScreen";
 import SettingsScreen from "./pages/SettingsScreen";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/archive" element={<ArchiveScreen />} />
             <Route path="/categories" element={<CategoriesScreen />} />
             <Route path="/settings" element={<SettingsScreen />} />
+            <Route path="/media-editor" element={<MediaEditorScreen />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </StudioLayout>
