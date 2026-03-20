@@ -1,18 +1,11 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Mic,
-  Library,
-  FolderOpen,
-  Archive,
-  Settings,
-  Menu,
-  X,
+  LayoutDashboard, Mic, Library, FolderOpen, Archive, Settings, Menu, X, Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlayerBar } from "./PlayerBar";
-import { TakeTicker } from "./TakeTicker";
+import { useStudio } from "@/store/StudioContext";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -20,16 +13,21 @@ const navItems = [
   { icon: Library, label: "Library", path: "/library" },
   { icon: FolderOpen, label: "Projects", path: "/projects" },
   { icon: Archive, label: "Archive", path: "/archive" },
+  { icon: Tag, label: "Categories", path: "/categories" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
 export function StudioLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [mobileNav, setMobileNav] = useState(false);
+  const { player, recorder } = useStudio();
 
   return (
     <div className="min-h-screen bg-background flex">
-      <TakeTicker progress={35} />
+      {/* Recording indicator bar */}
+      {recorder.status === "recording" && (
+        <div className="fixed top-0 left-0 right-0 z-[60] h-[2px] bg-destructive animate-pulse" />
+      )}
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-[220px] shrink-0 border-r border-border/50 bg-card/30 pt-4 pb-20">
@@ -37,7 +35,9 @@ export function StudioLayout({ children }: { children: ReactNode }) {
           <h1 className="text-lg font-semibold text-display tracking-tight text-foreground">
             Piano Studio
           </h1>
-          <p className="text-[11px] text-muted-foreground mt-0.5 text-mono">v2.1.0 · Studio Ready</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 text-mono">
+            v2.1.0 · {recorder.status === "recording" ? "Recording" : "Ready"}
+          </p>
         </div>
         <nav className="flex-1 px-3">
           {navItems.map((item) => {

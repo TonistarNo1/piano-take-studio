@@ -1,40 +1,25 @@
 import { motion } from "framer-motion";
 import {
-  Mic,
-  Video,
-  Headphones,
-  HardDrive,
-  Cpu,
-  Play,
-  Library,
-  FolderOpen,
-  Archive,
-  Star,
-  Clock,
-  Hash,
+  Mic, Video, Headphones, HardDrive, Cpu, Library, FolderOpen, Archive, Star, Clock, Hash,
 } from "lucide-react";
 import { StatusCard } from "@/components/studio/StatusCard";
 import { TakeCard } from "@/components/studio/TakeCard";
 import { Link } from "react-router-dom";
-
+import { useStudio } from "@/store/StudioContext";
 import { fadeUp } from "@/lib/animations";
 
-const recentTakes = [
-  { title: "Nocturne Op.9 No.2", takeNumber: 42, date: "Today, 14:32", duration: "4:53", project: "Chopin Nocturnes", category: "In Progress", isFavorite: true, hasVideo: true, hasComments: true, thumbnailHue: 142 },
-  { title: "Clair de Lune", takeNumber: 18, date: "Today, 11:05", duration: "5:21", project: "Debussy", category: "Idea", hasVideo: true, thumbnailHue: 220 },
-  { title: "Prelude in C Major", takeNumber: 7, date: "Yesterday", duration: "2:15", project: "Bach WTC", hasVideo: true, thumbnailHue: 280 },
-  { title: "Ballade No.1 — Opening", takeNumber: 31, date: "Yesterday", duration: "3:47", project: "Chopin Ballades", category: "In Progress", isFavorite: true, hasVideo: true, thumbnailHue: 340 },
-  { title: "Gymnopédie No.1", takeNumber: 12, date: "Mar 13", duration: "3:02", project: "Satie", hasVideo: true, thumbnailHue: 180 },
-];
-
 export default function Dashboard() {
+  const { getActiveTakes, getStats, recorder, projects, playTake, toggleFavorite } = useStudio();
+  const stats = getStats();
+  const recentTakes = getActiveTakes().slice(0, 5);
+  const activeProject = projects[0];
+
   return (
     <motion.div {...fadeUp} className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-semibold text-display text-foreground">Studio Ready.</h1>
         <p className="text-sm text-muted-foreground mt-1 text-mono">
-          Inputs active. SSD mounted. Ready for Take 104.
+          Inputs active. SSD mounted. Ready for Take {recorder.currentTakeNumber}.
         </p>
       </div>
 
@@ -42,7 +27,7 @@ export default function Dashboard() {
       <section>
         <h2 className="text-section-label mb-3">System Status</h2>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <StatusCard icon={Mic} label="Recorder" value="Idle" status="active" />
+          <StatusCard icon={Mic} label="Recorder" value={recorder.status === "recording" ? "Recording" : "Idle"} status={recorder.status === "recording" ? "active" : "idle"} />
           <StatusCard icon={Video} label="Video" value="Cam Link 4K" status="active" />
           <StatusCard icon={Headphones} label="Audio" value="Scarlett 2i2" status="active" />
           <StatusCard icon={HardDrive} label="Storage" value="842 GB Free" status="active" />
@@ -55,10 +40,10 @@ export default function Dashboard() {
         <h2 className="text-section-label mb-3">Quick Stats</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { icon: Clock, label: "Takes Today", value: "7" },
-            { icon: FolderOpen, label: "Projects", value: "12" },
-            { icon: Star, label: "Favorites", value: "34" },
-            { icon: Hash, label: "Total Takes", value: "1,247" },
+            { icon: Clock, label: "Takes Today", value: String(stats.takesToday) },
+            { icon: FolderOpen, label: "Projects", value: String(stats.totalProjects) },
+            { icon: Star, label: "Favorites", value: String(stats.favorites) },
+            { icon: Hash, label: "Total Takes", value: String(stats.totalTakes) },
           ].map((stat) => (
             <div key={stat.label} className="glass-card rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -103,20 +88,26 @@ export default function Dashboard() {
       </section>
 
       {/* Active Project */}
-      <section>
-        <h2 className="text-section-label mb-3">Active Project</h2>
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-lg font-semibold text-display text-foreground">Chopin Nocturnes</p>
-              <p className="text-sm text-muted-foreground mt-0.5">23 takes · 1h 42m total · Last updated today</p>
+      {activeProject && (
+        <section>
+          <h2 className="text-section-label mb-3">Active Project</h2>
+          <Link to={`/projects/${activeProject.id}`} className="glass-card rounded-xl p-5 block hover:bg-card-elevated transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lg font-semibold text-display text-foreground">{activeProject.name}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {getActiveTakes().filter((t) => t.project === activeProject.name).length} takes · Last updated today
+                </p>
+              </div>
+              {activeProject.category && (
+                <span className="text-[11px] font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
+                  {activeProject.category}
+                </span>
+              )}
             </div>
-            <span className="text-[11px] font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
-              In Progress
-            </span>
-          </div>
-        </div>
-      </section>
+          </Link>
+        </section>
+      )}
 
       {/* Recent Takes */}
       <section>
@@ -126,7 +117,12 @@ export default function Dashboard() {
         </div>
         <div className="space-y-2">
           {recentTakes.map((take) => (
-            <TakeCard key={take.takeNumber} {...take} />
+            <TakeCard
+              key={take.id}
+              take={take}
+              onPlay={() => playTake(take.id)}
+              onFavorite={() => toggleFavorite(take.id)}
+            />
           ))}
         </div>
       </section>

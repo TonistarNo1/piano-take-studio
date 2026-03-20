@@ -1,18 +1,20 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { AlertTriangle, Search } from "lucide-react";
 import { TakeCard } from "@/components/studio/TakeCard";
-
+import { useStudio } from "@/store/StudioContext";
 import { fadeUp } from "@/lib/animations";
 
-const archivedTakes = [
-  { title: "Nocturne Op.55 No.1 — Draft", takeNumber: 3, date: "Feb 28", duration: "4:11", project: "Chopin Nocturnes", isArchived: true, hasVideo: true, thumbnailHue: 142 },
-  { title: "Gnossienne No.1", takeNumber: 2, date: "Feb 25", duration: "3:45", project: "Satie", isArchived: true, hasVideo: true, thumbnailHue: 180 },
-  { title: "Prelude Op.28 No.4", takeNumber: 14, date: "Feb 20", duration: "2:03", project: "Chopin Preludes", isArchived: true, hasVideo: true, thumbnailHue: 60 },
-  { title: "Consolation No.3", takeNumber: 8, date: "Feb 18", duration: "5:22", project: "Liszt", isArchived: true, hasVideo: true, thumbnailHue: 300 },
-  { title: "Rêverie — Early Take", takeNumber: 1, date: "Feb 12", duration: "3:58", project: "Debussy", isArchived: true, hasVideo: true, thumbnailHue: 200 },
-];
-
 export default function ArchiveScreen() {
+  const { getArchivedTakes, restoreTake, deleteTake, toggleFavorite, playTake } = useStudio();
+  const [search, setSearch] = useState("");
+
+  const archived = getArchivedTakes().filter((t) =>
+    search ? t.title.toLowerCase().includes(search.toLowerCase()) : true
+  );
+
+  const totalSize = archived.length * 9.6; // approximate GB
+
   return (
     <motion.div {...fadeUp} className="space-y-6">
       <div>
@@ -26,7 +28,7 @@ export default function ArchiveScreen() {
         <div>
           <p className="text-sm font-medium text-warning">Auto-Archive Active</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Takes older than 14 days are automatically moved to the SSD archive. 
+            Takes older than 14 days are automatically moved to the SSD archive.
             Archived content is still browsable and can be restored at any time.
           </p>
         </div>
@@ -35,9 +37,9 @@ export default function ArchiveScreen() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Archived", value: "234" },
-          { label: "Storage Used", value: "48.2 GB" },
-          { label: "Oldest", value: "Jan 2025" },
+          { label: "Archived", value: String(archived.length) },
+          { label: "Storage Used", value: `${totalSize.toFixed(1)} GB` },
+          { label: "Oldest", value: archived.length > 0 ? archived[archived.length - 1].date : "—" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-xl p-4 text-center">
             <p className="text-xl font-semibold text-mono text-foreground">{s.value}</p>
@@ -50,6 +52,8 @@ export default function ArchiveScreen() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
         <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder="Search archive..."
           className="w-full h-11 pl-10 pr-4 rounded-xl bg-secondary/50 border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
         />
@@ -57,8 +61,19 @@ export default function ArchiveScreen() {
 
       {/* Takes */}
       <div className="space-y-2">
-        {archivedTakes.map((take) => (
-          <TakeCard key={take.takeNumber} {...take} />
+        {archived.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground text-sm">Archive is empty.</div>
+        )}
+        {archived.map((take) => (
+          <TakeCard
+            key={take.id}
+            take={take}
+            showActions
+            onPlay={() => playTake(take.id)}
+            onFavorite={() => toggleFavorite(take.id)}
+            onRestore={() => restoreTake(take.id)}
+            onDelete={() => deleteTake(take.id)}
+          />
         ))}
       </div>
     </motion.div>
